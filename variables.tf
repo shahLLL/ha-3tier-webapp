@@ -126,3 +126,36 @@ variable "natgw_name" {
     default = "main-nat-gateway"
 }
 
+# Client Route Table
+variable "client_rt_name" {
+    description = "Value of the Client Route Table's name tag"
+    type = string
+    default = "client-route-table"
+}
+
+variable "client_rt_cidr" {
+    description = "Value of the Client Route Table's CIDR Block"
+    type = string
+    default = "0.0.0.0/0"
+}
+
+# Server Route Table
+variable "server_rt_name" {
+    description = "Value of the Server Route Table's name tag"
+    type = string
+    default = "server-route-table"
+}
+
+variable "server_rt_cidr" {
+    description = "Value of the Server Route Table's CIDR Block"
+    type = string
+    default = "0.0.0.0/0"
+}
+
+# Client Route Table
+variable "database_rt_name" {
+    description = "Value of the Database Route Table's name tag"
+    type = string
+    default = "database-route-table"
+}
+

@@ -101,10 +101,74 @@ resource "aws_eip" "nat_gw_ip" {
 }
 
 # Create NAT Gateway
-resource "aws_nat_gaetway" "nat_gw" {
+resource "aws_nat_gateway" "nat_gw" {
     subnet_id = aws_subnet.subnet_a.id
     allocation_id = aws_eip.nat_gw_ip.id
     tags = {
         Name = var.natgw_name
     }
 }
+
+# Create Route Table for Client Layer
+resource "aws_route_table" "client_rt" {
+    vpc_id = aws_vpc.main.id
+    route {
+        cidr_block = var.client_rt_cidr
+        gateway_id = aws_internet_gateway.igw.id
+    }
+    tags = {
+        Name = var.client_rt_name
+    }
+}
+
+# Create Route Table for Server Layer
+resource "aws_route_table" "server_rt" {
+    vpc_id = aws_vpc.main.id
+    route {
+        cidr_block = var.server_rt_cidr
+        gateway_id = aws_nat_gateway.nat_gw.id
+    }
+    tags = {
+        Name = var.server_rt_name
+    }
+}
+
+# Create Route Table for Database Layer
+resource "aws_route_table" "database_rt" {
+    vpc_id = aws_vpc.main.id
+    tags = {
+        Name = var.database_rt_name
+    }
+}
+
+# Complete Route Table and Subnet Associations
+resource "aws_route_table_association" "client_a_assoc" {
+  subnet_id      = aws_subnet.subnet_a.id
+  route_table_id = aws_route_table.client_rt.id
+}
+
+resource "aws_route_table_association" "client_b_assoc" {
+  subnet_id      = aws_subnet.subnet_b.id
+  route_table_id = aws_route_table.client_rt.id
+}
+
+resource "aws_route_table_association" "server_a_assoc" {
+  subnet_id      = aws_subnet.subnet_c.id
+  route_table_id = aws_route_table.server_rt.id
+}
+
+resource "aws_route_table_association" "server_b_assoc" {
+  subnet_id      = aws_subnet.subnet_d.id
+  route_table_id = aws_route_table.server_rt.id
+}
+
+resource "aws_route_table_association" "database_a_assoc" {
+  subnet_id      = aws_subnet.subnet_e.id
+  route_table_id = aws_route_table.database_rt.id
+}
+
+resource "aws_route_table_association" "public_a_assoc" {
+  subnet_id      = aws_subnet.subnet_f.id
+  route_table_id = aws_route_table.database_rt.id
+}
+
