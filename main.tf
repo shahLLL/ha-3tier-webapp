@@ -13,3 +13,74 @@ resource "aws_vpc" "main"{
     }
 }
 
+# Create 1st Client Subnet
+resource "aws_subnet" "subnet_a" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_a_cidr_block
+    availability_zone = var.availability_zone_a
+    map_public_ip_on_launch = true
+
+    tags = {
+        Name = var.subnet_a_name
+    }
+}
+
+# Create 2nd Client Subnet
+resource "aws_subnet" "subnet_b" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_b_cidr_block
+    availability_zone = var.availability_zone_b
+    map_public_ip_on_launch = true
+
+    tags = {
+        Name = var.subnet_b_name
+    }
+}
+
+# Create 1st Server Subnet
+resource "aws_subnet" "subnet_c" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_c_cidr_block
+    availability_zone = var.availability_zone_a
+    map_public_ip_on_launch = false
+
+    tags = {
+        Name = var.subnet_c_name
+    }
+}
+
+# Create 2nd Server Subnet
+resource "aws_subnet" "subnet_d" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_d_cidr_block
+    availability_zone = var.availability_zone_b
+    map_public_ip_on_launch = true
+
+    tags = {
+        Name = var.subnet_d_name
+    }
+}
+
+# Create 1st Database Subnet
+resource "aws_subnet" "subnet_e" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_e_cidr_block
+    availability_zone = var.availability_zone_a
+    map_public_ip_on_launch = false
+
+    tags = {
+        Name = var.subnet_e_name
+    }
+}
+
+# Create 2nd Database Subnet
+resource "aws_subnet" "subnet_f" {
+    vpc_id = aws_vpc.main.id
+    cidr_block = var.subnet_f_cidr_block
+    availability_zone = var.availability_zone_b
+    map_public_ip_on_launch = true
+
+    tags = {
+        Name = var.subnet_f_name
+    }
+}
