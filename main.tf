@@ -84,3 +84,27 @@ resource "aws_subnet" "subnet_f" {
         Name = var.subnet_f_name
     }
 }
+
+# Create Internet Gateway
+resource "aws_internet_gateway" "igw" {
+    vpc_id = aws_vpc.main.id
+    tags = {
+        Name = var.igw_name
+    }
+}
+
+# Create Elastic IP for NAT Gateway
+resource "aws_eip" "nat_gw_ip" {
+    tags = {
+        Name = var.eip_name
+    }
+}
+
+# Create NAT Gateway
+resource "aws_nat_gaetway" "nat_gw" {
+    subnet_id = aws_subnet.subnet_a.id
+    allocation_id = aws_eip.nat_gw_ip.id
+    tags = {
+        Name = var.natgw_name
+    }
+}

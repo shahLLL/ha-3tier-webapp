@@ -105,3 +105,24 @@ variable "subnet_f_cidr_block" {
     type = string
     default = "10.0.22.0/24"
 }
+
+# IGW
+variable "igw_name" {
+    description = "Value of the Intenet Gateway's name tag"
+    type = string
+    default = "main-igw"
+}
+
+# NAT Gateway
+variable "eip_name" {
+    description = "Value of the NAT Gateway's ELastic IP's name tag"
+    type = string
+    default = "natgw-ip"
+}
+
+variable "natgw_name" {
+    description = "Value of the NAT Gateway's name tag"
+    type = string
+    default = "main-nat-gateway"
+}
+
