@@ -432,3 +432,11 @@ resource "aws_autoscaling_group" "server_asg" {
     version = "$Latest"
   }
 }
+
+# Create DB Subnet group
+resource "aws_db_subnet_group" "main_subnet_group" {
+  subnet_ids = [aws_subnet.subnet_e.id, aws_subnet.subnet_f.id]
+  tags = {
+    Name = var.db_subnet_grp_name
+  }
+}

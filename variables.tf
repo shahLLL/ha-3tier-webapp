@@ -243,3 +243,10 @@ variable "server_ec2_type" {
     type = string
     default = "t3.micro"
 }
+
+# DB Subnet Group
+variable "db_subnet_grp_name" {
+    description = "Value of the Name field in the DB Subnet Group"
+    type = string
+    default = "Database-Subnet-Group"
+}
