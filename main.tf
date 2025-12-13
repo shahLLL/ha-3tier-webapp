@@ -284,3 +284,81 @@ resource "aws_security_group_rule" "server_sg_egress_db" {
   source_security_group_id = aws_security_group.db_sg.id
 }
 
+# Create Client Application Load Balancer
+resource "aws_lb" "client_lb" {
+  name = var.client_lb_name
+  internal = false
+  load_balancer_type = "application"
+  subnets = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
+  security_groups = [aws_security_group.client_sg.id]
+  enable_deletion_protection = false
+  tags = {
+    Environment = var.client_lb_env
+  }
+}
+
+resource "aws_lb_target_group" "clinet_lb_tg" {
+  name = var.client_lb_tg_name
+  port = 80
+  protocol = "HTTP"
+  vpc_id = aws_vpc.main.id
+
+  health_check {
+    path = "/"
+    protocol = "HTTP"
+    matcher = "200"
+    interval = 30
+    timeout = 5
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+  }
+}
+
+resource "aws_lb_listener" "client_lb_listener" {
+  load_balancer_arn = aws_lb.client_lb.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.clinet_lb_tg.arn
+  }
+}
+
+resource "aws_lb" "server_lb" {
+  name = var.server_lb_name
+  internal = true
+  load_balancer_type = "application"
+  subnets = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
+  security_groups = [aws_security_group.server_sg.id]
+  enable_deletion_protection = false
+  tags = {
+    Environment = var.server_lb_env
+  }
+}
+
+resource "aws_lb_target_group" "server_lb_tg" {
+  name = var.server_lb_tg_name
+  port = 80
+  protocol = "HTTP"
+  vpc_id = aws_vpc.main.id
+
+  health_check {
+    path = "/"
+    protocol = "HTTP"
+    matcher = "200"
+    interval = 30
+    timeout = 5
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+  }
+}
+
+resource "aws_lb_listener" "server_lb_listener" {
+  load_balancer_arn = aws_lb.server_lb.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.server_lb_tg.arn
+  }
+}

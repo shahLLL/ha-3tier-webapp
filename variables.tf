@@ -179,3 +179,41 @@ variable "db_sg_name" {
     type = string
     default = "db-security-group"
 }
+
+# Client Load Balancer
+variable "client_lb_name" {
+    description = "Value of the name field in the client load balancer"
+    type = string
+    default = "client-load-balancer"
+}
+
+variable "client_lb_env" {
+    description = "Value of the Environment field in the client load balancer"
+    type = string
+    default = "dev"
+}
+
+variable "client_lb_tg_name" {
+    description = "Value of the name field in the client target group"
+    type = string
+    default = "client-target-group"
+}
+
+# Server Load Balancer
+variable "server_lb_name" {
+    description = "Value of the name field in the server load balancer"
+    type = string
+    default = "server-load-balancer"
+}
+
+variable "server_lb_env" {
+    description = "Value of the Environment field in the server load balancer"
+    type = string
+    default = "dev"
+}
+
+variable "server_lb_tg_name" {
+    description = "Value of the name field in the server target group"
+    type = string
+    default = "server-target-group"
+}
