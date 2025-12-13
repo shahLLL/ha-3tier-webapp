@@ -362,3 +362,10 @@ resource "aws_lb_listener" "server_lb_listener" {
     target_group_arn = aws_lb_target_group.server_lb_tg.arn
   }
 }
+
+resource "aws_key_pair" "ec2_key_pair" {
+  key_name = "my-key"
+  public_key = file("~/.ssh/my-tf-key.pub")
+}
+
+# Client EC2 Image
