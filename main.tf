@@ -368,7 +368,7 @@ resource "aws_key_pair" "ec2_key_pair" {
   public_key = file("~/.ssh/my-tf-key.pub")
 }
 
-# EC2 Image
+# Define EC2 Image
 data "aws_ami" "amazon_linux_2" {
   most_recent = true
   filter {
@@ -383,7 +383,7 @@ data "aws_ami" "amazon_linux_2" {
 }
 
 
-# Client EC2 Template
+# Create Client EC2 Template
 resource "aws_launch_template" "client_template" {
   name_prefix = var.client_ec2_name
   image_id = data.aws_ami.amazon_linux_2.id
@@ -391,7 +391,7 @@ resource "aws_launch_template" "client_template" {
   vpc_security_group_ids = [aws_security_group.client_sg.id]
 }
 
-# Client EC2 Auto Scaling Group
+# Create Client EC2 Auto Scaling Group
 resource "aws_autoscaling_group" "client_asg" {
   vpc_zone_identifier = [
     aws_subnet.subnet_a.id,
@@ -408,7 +408,7 @@ resource "aws_autoscaling_group" "client_asg" {
   }
 }
 
-# Server EC2 Template
+# Create Server EC2 Template
 resource "aws_launch_template" "server_template" {
   name_prefix = var.server_ec2_name
   image_id = data.aws_ami.amazon_linux_2.id
@@ -416,7 +416,7 @@ resource "aws_launch_template" "server_template" {
   vpc_security_group_ids = [aws_security_group.server_sg.id]
 }
 
-# Client EC2 Auto Scaling Group
+# Create Client EC2 Auto Scaling Group
 resource "aws_autoscaling_group" "server_asg" {
   vpc_zone_identifier = [
     aws_subnet.subnet_c.id,
