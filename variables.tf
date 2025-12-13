@@ -152,10 +152,30 @@ variable "server_rt_cidr" {
     default = "0.0.0.0/0"
 }
 
-# Client Route Table
+# Database Route Table
 variable "database_rt_name" {
     description = "Value of the Database Route Table's name tag"
     type = string
     default = "database-route-table"
 }
 
+# Client Security Group
+variable "client_sg_name" {
+    description = "Value of the Client Security Group's name tag"
+    type = string
+    default = "client-security-group"
+}
+
+# Server Security Group
+variable "server_sg_name" {
+    description = "Value of the Server Security Group's name tag"
+    type = string
+    default = "server-security-group"
+}
+
+# Database Security Group
+variable "db_sg_name" {
+    description = "Value of the Database Security Group's name tag"
+    type = string
+    default = "db-security-group"
+}
