@@ -368,4 +368,67 @@ resource "aws_key_pair" "ec2_key_pair" {
   public_key = file("~/.ssh/my-tf-key.pub")
 }
 
-# Client EC2 Image
+# EC2 Image
+data "aws_ami" "amazon_linux_2" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["amazon"]
+}
+
+
+# Client EC2 Template
+resource "aws_launch_template" "client_template" {
+  name_prefix = var.client_ec2_name
+  image_id = data.aws_ami.amazon_linux_2.id
+  instance_type = var.client_ec2_type
+  vpc_security_group_ids = [aws_security_group.client_sg.id]
+}
+
+# Client EC2 Auto Scaling Group
+resource "aws_autoscaling_group" "client_asg" {
+  vpc_zone_identifier = [
+    aws_subnet.subnet_a.id,
+    aws_subnet.subnet_b.id
+  ]
+
+  desired_capacity = 2
+  max_size = 4
+  min_size = 1
+
+  launch_template {
+    id = aws_launch_template.client_template.id
+    version = "$Latest"
+  }
+}
+
+# Server EC2 Template
+resource "aws_launch_template" "server_template" {
+  name_prefix = var.server_ec2_name
+  image_id = data.aws_ami.amazon_linux_2.id
+  instance_type = var.server_ec2_type
+  vpc_security_group_ids = [aws_security_group.server_sg.id]
+}
+
+# Client EC2 Auto Scaling Group
+resource "aws_autoscaling_group" "server_asg" {
+  vpc_zone_identifier = [
+    aws_subnet.subnet_c.id,
+    aws_subnet.subnet_d.id
+  ]
+
+  desired_capacity = 2
+  max_size = 4
+  min_size = 1
+
+  launch_template {
+    id = aws_launch_template.server_template.id
+    version = "$Latest"
+  }
+}

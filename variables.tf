@@ -217,3 +217,29 @@ variable "server_lb_tg_name" {
     type = string
     default = "server-target-group"
 }
+
+# Client EC2
+variable "client_ec2_name" {
+    description = "Value of the name field in the client EC2 launch template"
+    type = string
+    default = "client-ec2"
+}
+
+variable "client_ec2_type" {
+    description = "Value of the type field in the client EC2 launch template"
+    type = string
+    default = "t3.micro"
+}
+
+# Server EC2
+variable "server_ec2_name" {
+    description = "Value of the name field in the server EC2 launch template"
+    type = string
+    default = "server-ec2"
+}
+
+variable "server_ec2_type" {
+    description = "Value of the type field in the server EC2 launch template"
+    type = string
+    default = "t3.micro"
+}
