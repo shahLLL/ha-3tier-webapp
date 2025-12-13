@@ -440,3 +440,35 @@ resource "aws_db_subnet_group" "main_subnet_group" {
     Name = var.db_subnet_grp_name
   }
 }
+
+# Create RDS Instance
+resource "random_password" "db_master_password" {
+  length           = 16
+  special          = true
+  override_special = "!@#$%^&*()-_=+"
+}
+
+resource "aws_db_instance" "app_database_free_tier" {
+  identifier           = "app-database-free-tier"
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t3.micro" 
+  allocated_storage    = 20
+  storage_type         = "gp2"
+  multi_az             = false 
+
+  username             = "appadmin"
+  password             = random_password.db_master_password.result
+  
+  db_subnet_group_name = aws_db_subnet_group.main_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  publicly_accessible  = false 
+
+  backup_retention_period = 0
+  skip_final_snapshot     = true
+  tags = {
+    Name        = "AppDatabaseFreeTier"
+    Environment = "DevTest"
+  }
+}
+
