@@ -442,12 +442,6 @@ resource "aws_db_subnet_group" "main_subnet_group" {
 }
 
 # Create RDS Instance
-resource "random_password" "db_master_password" {
-  length           = 16
-  special          = true
-  override_special = "!@#$%^&*()-_=+"
-}
-
 resource "aws_db_instance" "app_database_free_tier" {
   identifier           = "app-database-free-tier"
   engine               = "mysql"
@@ -458,7 +452,7 @@ resource "aws_db_instance" "app_database_free_tier" {
   multi_az             = false 
 
   username             = "appadmin"
-  password             = random_password.db_master_password.result
+  password             = "passwordhaha"
   
   db_subnet_group_name = aws_db_subnet_group.main_subnet_group.name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
