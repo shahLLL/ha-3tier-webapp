@@ -3,180 +3,66 @@ provider "aws" {
     region = "us-west-2"
 }
 
+
 # Create VPC
-resource "aws_vpc" "main"{
-    cidr_block = var.vpc_cidr_block
-    enable_dns_support = true
-    enable_dns_hostnames = true
-    tags = {
-        Name = var.vpc_name
-    }
-}
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "6.5.1"
 
-# Create 1st Client Subnet
-resource "aws_subnet" "subnet_a" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_a_cidr_block
-    availability_zone = var.availability_zone_a
-    map_public_ip_on_launch = true
+  name = var.vpc_name
+  cidr = var.vpc_cidr_block
 
-    tags = {
-        Name = var.subnet_a_name
-    }
-}
+  azs = [
+    var.availability_zone_a,
+    var.availability_zone_b,
+  ]
 
-# Create 2nd Client Subnet
-resource "aws_subnet" "subnet_b" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_b_cidr_block
-    availability_zone = var.availability_zone_b
-    map_public_ip_on_launch = true
+  public_subnets = [
+    var.subnet_a_cidr_block,
+    var.subnet_b_cidr_block,
+  ]
 
-    tags = {
-        Name = var.subnet_b_name
-    }
-}
+  private_subnets = [
+    var.subnet_c_cidr_block,
+    var.subnet_d_cidr_block,
+  ]
 
-# Create 1st Server Subnet
-resource "aws_subnet" "subnet_c" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_c_cidr_block
-    availability_zone = var.availability_zone_a
-    map_public_ip_on_launch = false
+  database_subnets = [
+    var.subnet_e_cidr_block,
+    var.subnet_f_cidr_block,
+  ]
 
-    tags = {
-        Name = var.subnet_c_name
-    }
-}
+  enable_nat_gateway     = true
+  single_nat_gateway     = true
+  one_nat_gateway_per_az = false
 
-# Create 2nd Server Subnet
-resource "aws_subnet" "subnet_d" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_d_cidr_block
-    availability_zone = var.availability_zone_b
-    map_public_ip_on_launch = true
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
-    tags = {
-        Name = var.subnet_d_name
-    }
-}
+  tags = {
+    Environment = var.client_lb_env
+    Terraform   = "true"
+    Project     = "3-tier-app"
+  }
 
-# Create 1st Database Subnet
-resource "aws_subnet" "subnet_e" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_e_cidr_block
-    availability_zone = var.availability_zone_a
-    map_public_ip_on_launch = false
+  public_subnet_tags = {
+    Tier = "public"
+  }
 
-    tags = {
-        Name = var.subnet_e_name
-    }
-}
+  private_subnet_tags = {
+    Tier = "app"
+  }
 
-# Create 2nd Database Subnet
-resource "aws_subnet" "subnet_f" {
-    vpc_id = aws_vpc.main.id
-    cidr_block = var.subnet_f_cidr_block
-    availability_zone = var.availability_zone_b
-    map_public_ip_on_launch = true
-
-    tags = {
-        Name = var.subnet_f_name
-    }
-}
-
-# Create Internet Gateway
-resource "aws_internet_gateway" "igw" {
-    vpc_id = aws_vpc.main.id
-    tags = {
-        Name = var.igw_name
-    }
-}
-
-# Create Elastic IP for NAT Gateway
-resource "aws_eip" "nat_gw_ip" {
-    tags = {
-        Name = var.eip_name
-    }
-}
-
-# Create NAT Gateway
-resource "aws_nat_gateway" "nat_gw" {
-    subnet_id = aws_subnet.subnet_a.id
-    allocation_id = aws_eip.nat_gw_ip.id
-    tags = {
-        Name = var.natgw_name
-    }
-}
-
-# Create Route Table for Client Layer
-resource "aws_route_table" "client_rt" {
-    vpc_id = aws_vpc.main.id
-    route {
-        cidr_block = var.client_rt_cidr
-        gateway_id = aws_internet_gateway.igw.id
-    }
-    tags = {
-        Name = var.client_rt_name
-    }
-}
-
-# Create Route Table for Server Layer
-resource "aws_route_table" "server_rt" {
-    vpc_id = aws_vpc.main.id
-    route {
-        cidr_block = var.server_rt_cidr
-        gateway_id = aws_nat_gateway.nat_gw.id
-    }
-    tags = {
-        Name = var.server_rt_name
-    }
-}
-
-# Create Route Table for Database Layer
-resource "aws_route_table" "database_rt" {
-    vpc_id = aws_vpc.main.id
-    tags = {
-        Name = var.database_rt_name
-    }
-}
-
-# Complete Route Table and Subnet Associations
-resource "aws_route_table_association" "client_a_assoc" {
-  subnet_id      = aws_subnet.subnet_a.id
-  route_table_id = aws_route_table.client_rt.id
-}
-
-resource "aws_route_table_association" "client_b_assoc" {
-  subnet_id      = aws_subnet.subnet_b.id
-  route_table_id = aws_route_table.client_rt.id
-}
-
-resource "aws_route_table_association" "server_a_assoc" {
-  subnet_id      = aws_subnet.subnet_c.id
-  route_table_id = aws_route_table.server_rt.id
-}
-
-resource "aws_route_table_association" "server_b_assoc" {
-  subnet_id      = aws_subnet.subnet_d.id
-  route_table_id = aws_route_table.server_rt.id
-}
-
-resource "aws_route_table_association" "database_a_assoc" {
-  subnet_id      = aws_subnet.subnet_e.id
-  route_table_id = aws_route_table.database_rt.id
-}
-
-resource "aws_route_table_association" "public_a_assoc" {
-  subnet_id      = aws_subnet.subnet_f.id
-  route_table_id = aws_route_table.database_rt.id
+  database_subnet_tags = {
+    Tier = "database"
+  }
 }
 
 # Client Security Group
 resource "aws_security_group" "client_sg" {
   name        = var.client_sg_name
   description = "Allow HTTP access from world and SSH access from within VPC"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     description = "Allow HTTP from anywhere (IPv4)"
@@ -191,7 +77,7 @@ resource "aws_security_group" "client_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block] 
+    cidr_blocks = [module.vpc.vpc_cidr_block] 
   }
 
   egress {
@@ -210,14 +96,14 @@ resource "aws_security_group" "client_sg" {
 resource "aws_security_group" "server_sg" {
   name        = var.server_sg_name
   description = "Allow inbound from WebPubSG and outbound to DBPriSG"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
  
   egress {
     description = "Allow all outbound within VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [aws_vpc.main.cidr_block]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
   }
   
   tags = {
@@ -229,13 +115,13 @@ resource "aws_security_group" "server_sg" {
 resource "aws_security_group" "db_sg" {
   name        = var.db_sg_name
   description = "Database Security Group for MySQL/Aurora"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = module.vpc.vpc_id
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [aws_vpc.main.cidr_block]
+    cidr_blocks = [module.vpc.vpc_cidr_block]
   }
 
   tags = {
@@ -289,7 +175,7 @@ resource "aws_lb" "client_lb" {
   name = var.client_lb_name
   internal = false
   load_balancer_type = "application"
-  subnets = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
+  subnets = module.vpc.public_subnets
   security_groups = [aws_security_group.client_sg.id]
   enable_deletion_protection = false
   tags = {
@@ -301,7 +187,7 @@ resource "aws_lb_target_group" "clinet_lb_tg" {
   name = var.client_lb_tg_name
   port = 80
   protocol = "HTTP"
-  vpc_id = aws_vpc.main.id
+  vpc_id = module.vpc.vpc_id
 
   health_check {
     path = "/"
@@ -328,7 +214,7 @@ resource "aws_lb" "server_lb" {
   name = var.server_lb_name
   internal = true
   load_balancer_type = "application"
-  subnets = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
+  subnets = module.vpc.public_subnets
   security_groups = [aws_security_group.server_sg.id]
   enable_deletion_protection = false
   tags = {
@@ -340,7 +226,7 @@ resource "aws_lb_target_group" "server_lb_tg" {
   name = var.server_lb_tg_name
   port = 80
   protocol = "HTTP"
-  vpc_id = aws_vpc.main.id
+  vpc_id = module.vpc.vpc_id
 
   health_check {
     path = "/"
@@ -393,10 +279,7 @@ resource "aws_launch_template" "client_template" {
 
 # Create Client EC2 Auto Scaling Group
 resource "aws_autoscaling_group" "client_asg" {
-  vpc_zone_identifier = [
-    aws_subnet.subnet_a.id,
-    aws_subnet.subnet_b.id
-  ]
+  vpc_zone_identifier = module.vpc.public_subnets
 
   desired_capacity = 2
   max_size = 4
@@ -418,10 +301,7 @@ resource "aws_launch_template" "server_template" {
 
 # Create Client EC2 Auto Scaling Group
 resource "aws_autoscaling_group" "server_asg" {
-  vpc_zone_identifier = [
-    aws_subnet.subnet_c.id,
-    aws_subnet.subnet_d.id
-  ]
+  vpc_zone_identifier = module.vpc.private_subnets
 
   desired_capacity = 2
   max_size = 4
@@ -433,13 +313,6 @@ resource "aws_autoscaling_group" "server_asg" {
   }
 }
 
-# Create DB Subnet group
-resource "aws_db_subnet_group" "main_subnet_group" {
-  subnet_ids = [aws_subnet.subnet_e.id, aws_subnet.subnet_f.id]
-  tags = {
-    Name = var.db_subnet_grp_name
-  }
-}
 
 # Create RDS Instance
 resource "aws_db_instance" "app_database_free_tier" {
@@ -454,7 +327,7 @@ resource "aws_db_instance" "app_database_free_tier" {
   username             = "appadmin"
   password             = "passwordhaha"
   
-  db_subnet_group_name = aws_db_subnet_group.main_subnet_group.name
+  db_subnet_group_name = module.vpc.database_subnet_group_name
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   publicly_accessible  = false 
 
