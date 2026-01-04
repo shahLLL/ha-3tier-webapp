@@ -174,15 +174,13 @@ resource "random_password" "rds_master_password" {
   length           = 16
   special          = true
   override_special = "!@#$%^&*()-_=+"
-
-  # Optional: make it more secure
   min_lower        = 2
   min_upper        = 2
   min_numeric      = 2
   min_special      = 2
 }
 
-# Pass the password (either generated or provided) to the module
+# Create RDS Instance
 module "rds" {
   source = "./modules/rds"
 
