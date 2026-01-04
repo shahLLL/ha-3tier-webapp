@@ -17,22 +17,22 @@ module "vpc" {
   private_subnets = var.private_subnet_cidrs
   database_subnets = var.database_subnet_cidrs
 
-  # NAT configuration - single shared NAT (cost-effective for dev/small workloads)
+
   enable_nat_gateway     = true
   single_nat_gateway     = true
   one_nat_gateway_per_az = false
 
-  # DNS - good defaults
+
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  # Auto-assign public IPs in public subnets (very common & usually desired)
+
   map_public_ip_on_launch = true
 
-  # Explicitly create DB subnet group (default is true, but good to be clear)
+
   create_database_subnet_group = true
 
-  # Tags - use consistent environment variable
+
   tags = merge(
     local.common_tags,
     {
