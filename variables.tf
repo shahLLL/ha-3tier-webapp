@@ -269,3 +269,9 @@ variable "db_subnet_grp_name" {
     type = string
     default = "Database-Subnet-Group"
 }
+
+variable "rds_password" {
+  description = "Master password for the RDS instance. Leave empty to auto-generate a random password."
+  type        = string
+  sensitive   = true
+}

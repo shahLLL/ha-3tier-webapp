@@ -167,29 +167,41 @@ module "server_asg" {
   common_tags = local.common_tags
 }
 
+# Generate password only if not provided via variable
+resource "random_password" "rds_master_password" {
+  count = var.rds_password == "" ? 1 : 0
 
-# Create RDS Instance
-resource "aws_db_instance" "app_database_free_tier" {
-  identifier           = "app-database-free-tier"
-  engine               = "mysql"
-  engine_version       = "8.0"
-  instance_class       = "db.t3.micro" 
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  multi_az             = false 
+  length           = 16
+  special          = true
+  override_special = "!@#$%^&*()-_=+"
 
-  username             = "appadmin"
-  password             = "passwordhaha"
-  
-  db_subnet_group_name = module.vpc.database_subnet_group_name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
-  publicly_accessible  = false 
-
-  backup_retention_period = 0
-  skip_final_snapshot     = true
-  tags = {
-    Name        = "AppDatabaseFreeTier"
-    Environment = "DevTest"
-  }
+  # Optional: make it more secure
+  min_lower        = 2
+  min_upper        = 2
+  min_numeric      = 2
+  min_special      = 2
 }
 
+# Pass the password (either generated or provided) to the module
+module "rds" {
+  source = "./modules/rds"
+
+  identifier             = "${local.name_prefix}-mysql"
+  engine                 = "mysql"
+  engine_version         = "8.0"
+  instance_class         = "db.t3.micro"
+  allocated_storage      = 20
+  multi_az               = var.environment == "prod" ? true : false
+  db_name                = "appdb"
+  username               = "admin"
+  password               = var.rds_password != "" ? var.rds_password : random_password.rds_master_password[0].result
+
+  db_subnet_group_name   = module.vpc.database_subnet_group_name
+  security_group_ids     = [module.security_groups.database_sg_id]
+
+  skip_final_snapshot     = var.environment != "prod"
+  backup_retention_period = 7
+
+  environment            = local.environment
+  common_tags            = local.common_tags
+}
