@@ -71,83 +71,36 @@ module "security_groups" {
   database_sg_name  = "${local.name_prefix}-db-sg"
 }
 
-# Create Client Application Load Balancer
-resource "aws_lb" "client_lb" {
-  name = var.client_lb_name
-  internal = false
-  load_balancer_type = "application"
-  subnets = module.vpc.public_subnets
-  security_groups = [aws_security_group.client_sg.id]
-  enable_deletion_protection = false
-  tags = {
-    Environment = var.client_lb_env
-  }
+# Create Load Balancers
+
+# Public Client ALB
+module "client_alb" {
+  source = "./modules/alb"
+
+  name               = "${local.name_prefix}-client-alb"
+  internal           = false
+  vpc_id             = module.vpc.vpc_id
+  subnets            = module.vpc.public_subnets
+  security_group_ids = [module.security_groups.client_sg_id]
+  target_port        = 80
+
+  environment = local.environment
+  common_tags = local.common_tags
 }
 
-resource "aws_lb_target_group" "clinet_lb_tg" {
-  name = var.client_lb_tg_name
-  port = 80
-  protocol = "HTTP"
-  vpc_id = module.vpc.vpc_id
+# Internal Server ALB
+module "server_alb" {
+  source = "./modules/alb"
 
-  health_check {
-    path = "/"
-    protocol = "HTTP"
-    matcher = "200"
-    interval = 30
-    timeout = 5
-    healthy_threshold = 3
-    unhealthy_threshold = 3
-  }
-}
+  name               = "${local.name_prefix}-server-alb"
+  internal           = true
+  vpc_id             = module.vpc.vpc_id
+  subnets            = module.vpc.private_subnets
+  security_group_ids = [module.security_groups.server_sg_id]
+  target_port        = 80
 
-resource "aws_lb_listener" "client_lb_listener" {
-  load_balancer_arn = aws_lb.client_lb.arn
-  port = 80
-  protocol = "HTTP"
-  default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.clinet_lb_tg.arn
-  }
-}
-
-resource "aws_lb" "server_lb" {
-  name = var.server_lb_name
-  internal = true
-  load_balancer_type = "application"
-  subnets = module.vpc.public_subnets
-  security_groups = [aws_security_group.server_sg.id]
-  enable_deletion_protection = false
-  tags = {
-    Environment = var.server_lb_env
-  }
-}
-
-resource "aws_lb_target_group" "server_lb_tg" {
-  name = var.server_lb_tg_name
-  port = 80
-  protocol = "HTTP"
-  vpc_id = module.vpc.vpc_id
-
-  health_check {
-    path = "/"
-    protocol = "HTTP"
-    matcher = "200"
-    interval = 30
-    timeout = 5
-    healthy_threshold = 3
-    unhealthy_threshold = 3
-  }
-}
-
-resource "aws_lb_listener" "server_lb_listener" {
-  load_balancer_arn = aws_lb.server_lb.arn
-  port = 80
-  protocol = "HTTP"
-  default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.server_lb_tg.arn
-  }
+  environment = local.environment
+  common_tags = local.common_tags
 }
 
 resource "aws_key_pair" "ec2_key_pair" {
