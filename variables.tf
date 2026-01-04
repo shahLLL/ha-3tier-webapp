@@ -71,10 +71,30 @@ variable "rds_password" {
   # no default → forces explicit decision in production
 }
 
-# ── Optional / Advanced ────────────────────────────────────────────────────────
+# ── KEY ────────────────────────────────────────────────────────
 
 variable "key_name" {
   description = "Name of existing EC2 key pair for SSH access (optional)"
   type        = string
   default     = null
+}
+
+# ── NAT ────────────────────────────────────────────────────────
+
+variable "single_nat_gateway" {
+  description = "Whether to use a single NAT Gateway (cost-saving for dev)"
+  type        = bool
+  default     = true
+}
+
+variable "one_nat_gateway_per_az" {
+  description = "Create one NAT Gateway per AZ (better HA for prod)"
+  type        = bool
+  default     = false
+}
+
+variable "map_public_ip_on_launch" {
+  description = "Auto-assign public IP in public subnets"
+  type        = bool
+  default     = true
 }
