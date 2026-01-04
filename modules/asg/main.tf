@@ -1,5 +1,5 @@
 # 1. Launch Template (defines instance configuration)
-resource "aws_launch_template" "this" {
+resource "aws_launch_template" "my_launch_tamplate" {
   name_prefix   = "${var.name_prefix}-lt-"
   image_id      = var.ami_id
   instance_type = var.instance_type
@@ -24,7 +24,7 @@ resource "aws_launch_template" "this" {
 }
 
 # 2. Auto Scaling Group
-resource "aws_autoscaling_group" "this" {
+resource "aws_autoscaling_group" "asg" {
   name                = "${var.name_prefix}-asg"
   vpc_zone_identifier = var.vpc_zone_identifier
 

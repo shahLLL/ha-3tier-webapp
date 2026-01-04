@@ -1,5 +1,5 @@
 # RDS Instance
-resource "aws_db_instance" "this" {
+resource "aws_db_instance" "rds_instance" {
   identifier           = var.identifier
   engine               = var.engine
   engine_version       = var.engine_version
@@ -10,7 +10,7 @@ resource "aws_db_instance" "this" {
 
   db_name              = var.db_name
   username             = var.username
-  password             = var.password != "" ? var.password : random_password.master_password[0].result
+  password             = var.password
 
   vpc_security_group_ids = var.security_group_ids
   db_subnet_group_name   = var.db_subnet_group_name
@@ -35,6 +35,6 @@ resource "aws_db_instance" "this" {
 
   # Prevent accidental deletion in production
   lifecycle {
-    prevent_destroy = var.environment == "prod" ? true : false
+    prevent_destroy = true
   }
 }
