@@ -3,47 +3,43 @@ provider "aws" {
     region = "us-west-2"
 }
 
-
 # Create VPC
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.5.1"
+  version = "~> 6.5"
 
   name = var.vpc_name
   cidr = var.vpc_cidr_block
 
-  azs = [
-    var.availability_zone_a,
-    var.availability_zone_b,
-  ]
+  azs = var.availability_zones
 
-  public_subnets = [
-    var.subnet_a_cidr_block,
-    var.subnet_b_cidr_block,
-  ]
+  public_subnets  = var.public_subnet_cidrs
+  private_subnets = var.private_subnet_cidrs
+  database_subnets = var.database_subnet_cidrs
 
-  private_subnets = [
-    var.subnet_c_cidr_block,
-    var.subnet_d_cidr_block,
-  ]
-
-  database_subnets = [
-    var.subnet_e_cidr_block,
-    var.subnet_f_cidr_block,
-  ]
-
+  # NAT configuration - single shared NAT (cost-effective for dev/small workloads)
   enable_nat_gateway     = true
   single_nat_gateway     = true
   one_nat_gateway_per_az = false
 
+  # DNS - good defaults
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
-    Environment = var.client_lb_env
-    Terraform   = "true"
-    Project     = "3-tier-app"
-  }
+  # Auto-assign public IPs in public subnets (very common & usually desired)
+  map_public_ip_on_launch = true
+
+  # Explicitly create DB subnet group (default is true, but good to be clear)
+  create_database_subnet_group = true
+
+  # Tags - use consistent environment variable
+  tags = merge(
+    local.common_tags,
+    {
+      Environment = var.environment
+      Project     = "3-tier-app"
+    }
+  )
 
   public_subnet_tags = {
     Tier = "public"
