@@ -1,11 +1,11 @@
 # 1. Launch Template (defines instance configuration)
-resource "aws_launch_template" "my_launch_tamplate" {
+resource "aws_launch_template" "my_launch_template" {
   name_prefix   = "${var.name_prefix}-lt-"
   image_id      = var.ami_id
   instance_type = var.instance_type
 
   vpc_security_group_ids = var.security_group_ids
-  key_name = var.key_name != "" ? var.key_name : null
+  key_name = var.key_name
 
   tag_specifications {
     resource_type = "instance"
@@ -38,7 +38,7 @@ resource "aws_autoscaling_group" "asg" {
   target_group_arns = var.target_group_arns
 
   launch_template {
-    id      = aws_launch_template.this.id
+    id      = aws_launch_template.my_launch_template.id
     version = "$Latest"
   }
 

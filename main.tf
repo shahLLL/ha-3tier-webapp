@@ -1,6 +1,6 @@
 # Configure AWS Provider
 provider "aws" {
-    region = "us-west-2"
+    region = var.region
 }
 
 # Create VPC
@@ -11,23 +11,23 @@ module "vpc" {
   name = var.vpc_name
   cidr = var.vpc_cidr_block
 
-  azs = var.availability_zones
+  azs = local.availability_zones
 
-  public_subnets  = var.public_subnet_cidrs
-  private_subnets = var.private_subnet_cidrs
-  database_subnets = var.database_subnet_cidrs
+  public_subnets  = local.public_subnet_cidrs
+  private_subnets = local.private_subnet_cidrs
+  database_subnets = local.database_subnet_cidrs
 
 
   enable_nat_gateway     = true
-  single_nat_gateway     = var.single_nat_gateway
-  one_nat_gateway_per_az = var.one_nat_gateway_per_az
+  single_nat_gateway     = local.single_nat_gateway
+  one_nat_gateway_per_az = local.one_nat_gateway_per_az
 
 
   enable_dns_support   = true
   enable_dns_hostnames = true
 
 
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = local.map_public_ip_on_launch
 
 
   create_database_subnet_group = true
@@ -37,7 +37,7 @@ module "vpc" {
     local.common_tags,
     {
       Environment = var.environment
-      Project     = "3-tier-app"
+      Project     = var.name
     }
   )
 
@@ -101,8 +101,8 @@ module "server_alb" {
 
 # AWS Key Pair
 resource "aws_key_pair" "ec2_key_pair" {
-  key_name = "my-key"
-  public_key = file("~/.ssh/my-tf-key.pub")
+  key_name = var.key_name
+  public_key = var.key_path
 }
 
 # Define EC2 Image
@@ -128,7 +128,7 @@ module "client_asg" {
   name_prefix         = "${local.name_prefix}-client"
   vpc_zone_identifier = module.vpc.public_subnets
   ami_id              = data.aws_ami.amazon_linux_2.id
-  instance_type       = var.client_instance_type
+  instance_type       = local.client_instance_type
   security_group_ids  = [module.security_groups.client_sg_id]
   target_group_arns   = [module.client_alb.target_group_arn]
   key_name = aws_key_pair.ec2_key_pair.key_name
@@ -149,7 +149,7 @@ module "server_asg" {
   name_prefix         = "${local.name_prefix}-server"
   vpc_zone_identifier = module.vpc.private_subnets
   ami_id              = data.aws_ami.amazon_linux_2.id
-  instance_type       = var.server_instance_type
+  instance_type       = local.server_instance_type
   security_group_ids  = [module.security_groups.server_sg_id]
   target_group_arns   = [module.server_alb.target_group_arn]
   key_name = aws_key_pair.ec2_key_pair.key_name
@@ -180,12 +180,12 @@ resource "random_password" "rds_master_password" {
 module "rds" {
   source = "./modules/rds"
 
-  identifier             = "${local.name_prefix}-mysql"
+  identifier             = "${local.environment}-mysql"
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
-  multi_az               = var.environment == "prod" ? true : false
+  multi_az               = local.multi_az
   db_name                = "appdb"
   username               = "admin"
   password               = var.rds_password != "" ? var.rds_password : random_password.rds_master_password[0].result
@@ -193,8 +193,8 @@ module "rds" {
   db_subnet_group_name   = module.vpc.database_subnet_group_name
   security_group_ids     = [module.security_groups.database_sg_id]
 
-  skip_final_snapshot     = var.environment != "prod"
-  backup_retention_period = 7
+  skip_final_snapshot     = local.skip_final_snapshot
+  backup_retention_period = local.backup_retention_period
 
   environment            = local.environment
   common_tags            = local.common_tags
