@@ -103,6 +103,7 @@ module "server_alb" {
   common_tags = local.common_tags
 }
 
+# AWS Key Pair
 resource "aws_key_pair" "ec2_key_pair" {
   key_name = "my-key"
   public_key = file("~/.ssh/my-tf-key.pub")
@@ -122,49 +123,48 @@ data "aws_ami" "amazon_linux_2" {
   owners = ["amazon"]
 }
 
+# Create Auto Scaing Groups
 
-# Create Client EC2 Template
-resource "aws_launch_template" "client_template" {
-  name_prefix = var.client_ec2_name
-  image_id = data.aws_ami.amazon_linux_2.id
-  instance_type = var.client_ec2_type
-  vpc_security_group_ids = [aws_security_group.client_sg.id]
-}
+# Client ASG
+module "client_asg" {
+  source = "./modules/asg"
 
-# Create Client EC2 Auto Scaling Group
-resource "aws_autoscaling_group" "client_asg" {
+  name_prefix         = "${local.name_prefix}-client"
   vpc_zone_identifier = module.vpc.public_subnets
+  ami_id              = data.aws_ami.amazon_linux_2.id
+  instance_type       = var.client_instance_type
+  security_group_ids  = [module.security_groups.client_sg_id]
+  target_group_arns   = [module.client_alb.target_group_arn]
+  key_name = aws_key_pair.ec2_key_pair.key_name
 
+  min_size         = 1
+  max_size         = 4
   desired_capacity = 2
-  max_size = 4
-  min_size = 1
 
-  launch_template {
-    id = aws_launch_template.client_template.id
-    version = "$Latest"
-  }
+  health_check_type = "ELB"
+
+  common_tags = local.common_tags
 }
 
-# Create Server EC2 Template
-resource "aws_launch_template" "server_template" {
-  name_prefix = var.server_ec2_name
-  image_id = data.aws_ami.amazon_linux_2.id
-  instance_type = var.server_ec2_type
-  vpc_security_group_ids = [aws_security_group.server_sg.id]
-}
+# Server ASG
+module "server_asg" {
+  source = "./modules/asg"
 
-# Create Client EC2 Auto Scaling Group
-resource "aws_autoscaling_group" "server_asg" {
+  name_prefix         = "${local.name_prefix}-server"
   vpc_zone_identifier = module.vpc.private_subnets
+  ami_id              = data.aws_ami.amazon_linux_2.id
+  instance_type       = var.server_instance_type
+  security_group_ids  = [module.security_groups.server_sg_id]
+  target_group_arns   = [module.server_alb.target_group_arn]
+  key_name = aws_key_pair.ec2_key_pair.key_name
 
+  min_size         = 1
+  max_size         = 4
   desired_capacity = 2
-  max_size = 4
-  min_size = 1
 
-  launch_template {
-    id = aws_launch_template.server_template.id
-    version = "$Latest"
-  }
+  health_check_type = "ELB"
+
+  common_tags = local.common_tags
 }
 
 

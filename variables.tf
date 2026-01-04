@@ -173,11 +173,23 @@ variable "client_sg_name" {
     default = "client-security-group"
 }
 
+variable "client_instance_type" {
+    description = "Client EC2 instance type"
+    type = string
+    default = "t3.micro"
+}
+
 # Server Security Group
 variable "server_sg_name" {
     description = "Value of the Server Security Group's name tag"
     type = string
     default = "server-security-group"
+}
+
+variable "server_instance_type" {
+    description = "Server EC2 instance type"
+    type = string
+    default = "t3.micro"
 }
 
 # Database Security Group
