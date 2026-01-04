@@ -1,3 +1,10 @@
+# Environment
+variable "environment" {
+    description = "Value of the current environment"
+    type = string
+    default = "dev"
+}
+
 # VPC
 
 variable "vpc_name" {
