@@ -58,116 +58,17 @@ module "vpc" {
   }
 }
 
-# Client Security Group
-resource "aws_security_group" "client_sg" {
-  name        = var.client_sg_name
-  description = "Allow HTTP access from world and SSH access from within VPC"
-  vpc_id      = module.vpc.vpc_id
+# Security Groups
+module "security_groups" {
+  source = "./modules/security-groups"
 
-  ingress {
-    description = "Allow HTTP from anywhere (IPv4)"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
-  }
+  vpc_id            = module.vpc.vpc_id
+  vpc_cidr_block    = module.vpc.vpc_cidr_block
+  common_tags       = local.common_tags
 
-  ingress {
-    description = "Allow SSH from within VPC only"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [module.vpc.vpc_cidr_block] 
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1" # -1 means all protocols
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = var.client_sg_name
-  }
-}
-
-# Server Security Group
-resource "aws_security_group" "server_sg" {
-  name        = var.server_sg_name
-  description = "Allow inbound from WebPubSG and outbound to DBPriSG"
-  vpc_id      = module.vpc.vpc_id
- 
-  egress {
-    description = "Allow all outbound within VPC"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [module.vpc.vpc_cidr_block]
-  }
-  
-  tags = {
-    Name = var.server_sg_name
-  }
-}
-
-# Database Security Group
-resource "aws_security_group" "db_sg" {
-  name        = var.db_sg_name
-  description = "Database Security Group for MySQL/Aurora"
-  vpc_id      = module.vpc.vpc_id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [module.vpc.vpc_cidr_block]
-  }
-
-  tags = {
-    Name = var.db_sg_name
-  }
-}
-
-# Security Group Rules
-resource "aws_security_group_rule" "server_sg_ingress_ssh" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  description       = "Allow SSH from Client SG"
-  security_group_id = aws_security_group.server_sg.id
-  source_security_group_id = aws_security_group.client_sg.id
-}
-
-resource "aws_security_group_rule" "server_sg_ingress_icmp" {
-  type              = "ingress"
-  from_port         = 8
-  to_port           = 0 # To port 0 for all ICMP types
-  protocol          = "icmp"
-  description       = "Allow ICMP from Client SG"
-  security_group_id = aws_security_group.server_sg.id
-  source_security_group_id = aws_security_group.client_sg.id
-}
-
-resource "aws_security_group_rule" "db_sg_ingress_mysql" {
-  type              = "ingress"
-  from_port         = 3306
-  to_port           = 3306
-  protocol          = "tcp"
-  description       = "Allow DB access from Server SG"
-  security_group_id = aws_security_group.db_sg.id
-  source_security_group_id = aws_security_group.server_sg.id
-}
-
-resource "aws_security_group_rule" "server_sg_egress_db" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  description       = "Allow all traffic outbound to DB"
-  security_group_id = aws_security_group.server_sg.id
-  source_security_group_id = aws_security_group.db_sg.id
+  client_sg_name    = "${local.name_prefix}-client-sg"
+  server_sg_name    = "${local.name_prefix}-app-sg"
+  database_sg_name  = "${local.name_prefix}-db-sg"
 }
 
 # Create Client Application Load Balancer
