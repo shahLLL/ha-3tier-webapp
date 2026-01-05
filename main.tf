@@ -102,7 +102,7 @@ module "server_alb" {
 # AWS Key Pair
 resource "aws_key_pair" "ec2_key_pair" {
   key_name = var.key_name
-  public_key = var.key_path
+  public_key = file(var.key_path)
 }
 
 # Define EC2 Image
