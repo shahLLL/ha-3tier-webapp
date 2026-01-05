@@ -32,9 +32,4 @@ resource "aws_db_instance" "rds_instance" {
       Environment = var.environment
     }
   )
-
-  # Prevent accidental deletion in production
-  lifecycle {
-    prevent_destroy = true
-  }
 }
