@@ -48,6 +48,9 @@ The database tier contains the following:
 
 The RDS Engine can be changed/adapted as needed.
 
+## DeepDive
+For a deep dive on this architecture, please feel free to read [this](https://medium.com/@samiur1998/designing-a-highly-available-3-tier-web-app-on-aws-40c1af63760f) article.
+
 # Pre-requistites 📝
 The following are pre-requistes that are necessary to successfully use this package and deploy the desired infrastructure:
   - [**A GitHub Account**](https://docs.github.com/en/get-started/start-your-journey/creating-an-account-on-github)
